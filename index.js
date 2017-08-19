@@ -2,6 +2,8 @@ var LogService = require("./src/LogService");
 var Cli = require("matrix-appservice-bridge").Cli;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 var path = require("path");
+var SmsStore = require("./src/storage/SmsStore");
+var SmsBridge = require("./src/SmsBridge");
 
 new Cli({
     registrationPath: "appservice-registration-sms.yaml",
@@ -59,5 +61,13 @@ new Cli({
     run: function (port, config, registration) {
         LogService.init(config);
         LogService.info("index", "Preparing database...");
+        SmsStore.prepare().then(() => {
+           LogService.info("index", "Preparing bridge...");
+            var bridge = new SmsBridge(config, registration);
+            return bridge.run(port);
+        }).catch(err => {
+            LogService.error("Init", "Failed to start the bridge");
+            throw err;
+        });
     }
 }).run();
