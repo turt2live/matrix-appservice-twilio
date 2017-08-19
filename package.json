@@ -12,5 +12,15 @@
   "bugs": {
     "url": "https://github.com/turt2live/matrix-appservice-sms/issues"
   },
-  "homepage": "https://github.com/turt2live/matrix-appservice-sms#readme"
+  "homepage": "https://github.com/turt2live/matrix-appservice-sms#readme",
+  "dependencies": {
+    "chalk": "^2.1.0",
+    "db-migrate": "^0.10.0-beta.23",
+    "db-migrate-sqlite": "^0.1.2",
+    "lodash": "^4.17.4",
+    "matrix-appservice-bridge": "^1.4.0-a",
+    "moment": "^2.18.1",
+    "sqlite3": "^3.1.9",
+    "winston": "^2.3.1"
+  }
 }

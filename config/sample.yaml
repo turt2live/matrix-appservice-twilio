@@ -1,0 +1,40 @@
+# Configuration specific to the application service. All fields (unless otherwise marked) are required.
+homeserver:
+  # The domain for the client-server API calls.
+  url: "http://localhost:8008"
+
+  # The domain part for user IDs on this home server. Usually, but not always, this is the same as the
+  # home server's URL.
+  domain: "localhost"
+
+# Configuration specific to the bridge. All fields (unless otherwise marked) are required.
+smsBot:
+  # Appearance options for the Matrix bot
+  appearance:
+    displayName: "SMS Bridge"
+    avatarUrl: "https://t2bot.io/_matrix/media/v1/download/t2l.io/SOZlqpJCUoecxNFZGGnDEhEy" # SMS icon
+
+# Your Twilio account settings
+twilio:
+  accountSid: "YOUR_SID_HERE"
+  accountToken: "YOUR_AUTH_TOKEN_HERE"
+
+# Settings related to the operation of the bridge
+smsBridge:
+  # The phone number to listen for incoming SMS messages on, and to send messages from
+  # Must be registered already in Twilio
+  phoneNumber: "+15551234567"
+
+  # The Matrix users that are allowed to use this bridge. All messages will be sent through
+  # the above phone number.
+  allowedUsers:
+  - "@me:t2bot.io"
+
+logging:
+  file: logs/sms.log
+  console: true
+  consoleLevel: info
+  fileLevel: verbose
+  rotate:
+    size: 52428800 # bytes, default is 50mb
+    count: 5

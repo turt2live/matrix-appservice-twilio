@@ -1,4 +1,14 @@
-.idea/
+/.idea
+
+room-store.db
+user-store.db
+
+db/*.db
+
+config/config.yaml
+appservice-registration-sms.yaml
+rooms.db
+users.db
 
 # Logs
 logs

@@ -1,0 +1,54 @@
+"$schema": "http://json-schema.org/draft-04/schema#"
+type: "object"
+properties:
+  twilio:
+    type: "object"
+    properties:
+      accountSid:
+        type: "string"
+      accountToken:
+        type: "string"
+  smsBridge:
+    type: "object"
+    properties:
+      phoneNumber:
+        type: "string"
+      allowedUsers:
+        type: "array"
+  homeserver:
+    type: "object"
+    properties:
+      domain:
+        type: "string"
+      url:
+        type: "string"
+      mediaUrl:
+        type: "string"
+  smsBot:
+    type: "object"
+    properties:
+      appearance:
+        type: "object"
+        properties:
+          displayName:
+            type: "string"
+          avatarUrl:
+            type: "string"
+  logging:
+    type: "object"
+    properties:
+      file:
+        type: "string"
+      console:
+        type: "boolean"
+      consoleLevel:
+        type: "string"
+      fileLevel:
+        type: "string"
+      rotate:
+        type: "object"
+        properties:
+          size:
+            type: "number"
+          count:
+            type: "number"
