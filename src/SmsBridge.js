@@ -246,6 +246,7 @@ class SmsBridge {
 
     _processMessage(event) {
         if (this.isBridgeUser(event.sender)) return;
+        if (this._config.smsBridge.allowedUsers.indexOf(event.sender) === -1) return; // not allowed - don't send
 
         this.getBot().getJoinedMembers(event.room_id).then(members => {
             var roomMemberIds = _.keys(members);
