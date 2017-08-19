@@ -1,7 +1,8 @@
 var twilio = require("./twilio/TwilioProvider");
 
 // Note: Provider should implement the following methods:
-// sendSms(phoneNumber, text);
+// Promise init(config);
+// Promise sendSms(phoneNumber, text);
 
 // TODO: Use interface
 

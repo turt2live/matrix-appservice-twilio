@@ -50,6 +50,7 @@ class SmsBridge {
     run(port) {
         LogService.info("SmsBridge", "Starting bridge");
         return this._bridge.run(port, this._config)
+            .then(() => SmsProvider.init(this._config))
             .then(() => this._updateBotProfile())
             .then(() => this._bridgeKnownRooms())
             .catch(error => LogService.error("SmsBridge", error));
@@ -178,7 +179,7 @@ class SmsBridge {
      * @return {Promise<>} resolves when processing is complete
      * @private
      */
-    _processRoom(roomId, adminRoomOwner = null, newRoom=false) {
+    _processRoom(roomId, adminRoomOwner = null, newRoom = false) {
         LogService.info("SmsBridge", "Request to bridge room " + roomId);
         return this.getBot().getJoinedMembers(roomId).then(members => {
             var roomMemberIds = _.keys(members);
@@ -250,14 +251,29 @@ class SmsBridge {
             var roomMemberIds = _.keys(members);
             var phoneNumbers = this._getPhoneNumbers(roomMemberIds);
 
-            // TODO: Handle errors
-            for (var number of phoneNumbers) SmsProvider.sendSms(number, event.content.body);
+            for (var number of phoneNumbers) {
+                this._sendSms(number, event);
+            }
+        });
+    }
+
+    _sendSms(phoneNumber, event) {
+        LogService.verbose("SmsBridge", "Sending text to " + phoneNumber);
+        SmsProvider.sendSms(phoneNumber, event.content.body).then(() => {
+            this.getSmsIntent(phoneNumber).sendReadReceipt(event.room_id, event.event_id);
+        }).catch(error => {
+            LogService.error("SmsBridge", "Error sending message to " + phoneNumber);
+            LogService.error("SmsBridge", error);
+            this.getSmsIntent(phoneNumber).sendMessage(event.room_id, {
+                msgtype: "m.notice",
+                body: "Error sending text message. Please try again later."
+            });
         });
     }
 
     _getPhoneNumbers(userIds) {
         var numbers = [];
-        for(var userId of userIds) {
+        for (var userId of userIds) {
             if (!this.isBridgeUser(userId)) continue;
             if (!userId.startsWith("@_sms_")) continue;
 
