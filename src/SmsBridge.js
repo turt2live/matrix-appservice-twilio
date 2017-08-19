@@ -5,6 +5,8 @@ var SmsStore = require("./storage/SmsStore");
 var Promise = require('bluebird');
 var _ = require('lodash');
 var util = require("./utils");
+var SmsProvider = require("./sms/SmsProvider");
+var RemoteUser = require("matrix-appservice-bridge").RemoteUser;
 
 class SmsBridge {
     constructor(config, registration) {
@@ -23,7 +25,7 @@ class SmsBridge {
                 // none of these are used because the bridge doesn't allow users to create rooms or users
                 // onAliasQuery: this._onAliasQuery.bind(this),
                 // onAliasQueried: this._onAliasQueried.bind(this),
-                // onUserQuery: this._onUserQuery.bind(this), // TODO: This
+                onUserQuery: this._onUserQuery.bind(this),
                 onLog: (line, isError) => {
                     var method = isError ? LogService.error : LogService.verbose;
                     method("matrix-appservice-bridge", line);
@@ -115,6 +117,15 @@ class SmsBridge {
     }
 
     /**
+     * Destroys an admin room. This will not cause the bridge bot to leave. It will simply de-categorize it.
+     * The room may be unintentionally restored when the bridge restarts, depending on the room conditions.
+     * @param {string} roomId the room ID to destroy
+     */
+    removeAdminRoom(roomId) {
+        this._adminRooms[roomId] = null;
+    }
+
+    /**
      * Updates the bridge bot's appearance in matrix
      * @private
      */
@@ -169,7 +180,7 @@ class SmsBridge {
      */
     _processRoom(roomId, adminRoomOwner = null, newRoom=false) {
         LogService.info("SmsBridge", "Request to bridge room " + roomId);
-        return this._bridge.getBot().getJoinedMembers(roomId).then(members => {
+        return this.getBot().getJoinedMembers(roomId).then(members => {
             var roomMemberIds = _.keys(members);
             var botIdx = roomMemberIds.indexOf(this._bridge.getBot().getUserId());
 
@@ -219,8 +230,42 @@ class SmsBridge {
         return Promise.resolve();
     }
 
+    /**
+     * Bridge handler to update/create user information
+     * @private
+     */
+    _onUserQuery(matrixUser) {
+        var handle = matrixUser.localpart.substring('_sms_'.length);
+        if (handle.startsWith("+")) handle = handle.substring(1);
+        return Promise.resolve({
+            name: "+" + handle + " (SMS)",
+            remote: new RemoteUser(matrixUser.localpart)
+        });
+    }
+
     _processMessage(event) {
-        // TODO: Do something
+        if (this.isBridgeUser(event.sender)) return;
+
+        this.getBot().getJoinedMembers(event.room_id).then(members => {
+            var roomMemberIds = _.keys(members);
+            var phoneNumbers = this._getPhoneNumbers(roomMemberIds);
+
+            // TODO: Handle errors
+            for (var number of phoneNumbers) SmsProvider.sendSms(number, event.content.body);
+        });
+    }
+
+    _getPhoneNumbers(userIds) {
+        var numbers = [];
+        for(var userId of userIds) {
+            if (!this.isBridgeUser(userId)) continue;
+            if (!userId.startsWith("@_sms_")) continue;
+
+            var number = userId.substring("@_sms_".length).split(':')[0].trim();
+            numbers.push(number);
+        }
+
+        return numbers;
     }
 }
 
