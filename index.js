@@ -2,11 +2,11 @@ var LogService = require("./src/LogService");
 var Cli = require("matrix-appservice-bridge").Cli;
 var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegistration;
 var path = require("path");
-var SmsStore = require("./src/storage/SmsStore");
-var SmsBridge = require("./src/SmsBridge");
+var TwilioStore = require("./src/storage/TwilioStore");
+var TwilioBridge = require("./src/TwilioBridge");
 
 new Cli({
-    registrationPath: "appservice-registration-sms.yaml",
+    registrationPath: "appservice-registration-twilio.yaml",
     enableRegistration: true,
     enableLocalpart: true,
     bridgeConfig: {
@@ -20,7 +20,7 @@ new Cli({
             },
             smsBot: {
                 appearance: {
-                    displayName: "SMS Bridge",
+                    displayName: "Twilio Bridge",
                     avatarUrl: "https://t2bot.io/_matrix/media/v1/download/t2l.io/SOZlqpJCUoecxNFZGGnDEhEy" // sms bridge icon
                 }
             },
@@ -33,7 +33,7 @@ new Cli({
                 allowedUsers: ["@me:t2bot.io"]
             },
             logging: {
-                file: "logs/sms.log",
+                file: "logs/twilio.log",
                 console: true,
                 consoleLevel: 'info',
                 fileLevel: 'verbose',
@@ -51,19 +51,19 @@ new Cli({
         registration.setRateLimited(false); // disabled because webhooks can get spammy
 
         if (!registration.getSenderLocalpart()) {
-            registration.setSenderLocalpart("_sms");
+            registration.setSenderLocalpart("_twilio");
         }
 
-        registration.addRegexPattern("users", "@_sms.*", true);
+        registration.addRegexPattern("users", "@_twilio.*", true);
 
         callback(registration);
     },
     run: function (port, config, registration) {
         LogService.init(config);
         LogService.info("index", "Preparing database...");
-        SmsStore.prepare().then(() => {
+        TwilioStore.prepare().then(() => {
            LogService.info("index", "Preparing bridge...");
-            var bridge = new SmsBridge(config, registration);
+            var bridge = new TwilioBridge(config, registration);
             return bridge.run(port);
         }).catch(err => {
             LogService.error("Init", "Failed to start the bridge");

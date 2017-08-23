@@ -8,7 +8,7 @@ var Promise = require("bluebird");
 /**
  * Primary storage for the SMS Bridge
  */
-class SmsStore {
+class TwilioStore {
 
     /**
      * Creates a new SMS store. Call `prepare` before use.
@@ -22,7 +22,7 @@ class SmsStore {
      */
     prepare() {
         var env = process.env.NODE_ENV || "development";
-        LogService.info("SmsStore", "Running migrations");
+        LogService.info("TwilioStore", "Running migrations");
         return new Promise((resolve, reject)=> {
             var dbMigrate = DBMigrate.getInstance(true, {
                 config: "./config/database.json",
@@ -42,17 +42,17 @@ class SmsStore {
                         min: 0,
                         idle: 10000
                     },
-                    logging: i => LogService.verbose("SmsStore [SQL]", i)
+                    logging: i => LogService.verbose("TwilioStore [SQL]", i)
                 };
 
                 this._orm = new Sequelize(dbConfigEnv.database || 'sms', dbConfigEnv.username, dbConfigEnv.password, opts);
                 this._bindModels();
                 resolve();
             }, err => {
-                LogService.error("SmsStore", err);
+                LogService.error("TwilioStore", err);
                 reject(err);
             }).catch(err => {
-                LogService.error("SmsStore", err);
+                LogService.error("TwilioStore", err);
                 reject(err);
             });
         });
@@ -102,4 +102,4 @@ class SmsStore {
     }
 }
 
-module.exports = new SmsStore();
+module.exports = new TwilioStore();

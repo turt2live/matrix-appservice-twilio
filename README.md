@@ -1,11 +1,11 @@
-# matrix-appservice-sms
+# matrix-appservice-twilio
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/turt2live/matrix-appservice-sms.svg)](https://greenkeeper.io/)
-[![TravisCI badge](https://travis-ci.org/turt2live/matrix-appservice-sms.svg?branch=master)](https://travis-ci.org/turt2live/matrix-appservice-sms) 
-[![Targeted for next release](https://badge.waffle.io/turt2live/matrix-appservice-sms.png?label=sorted&title=Targeted+for+next+release)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
-[![WIP](https://badge.waffle.io/turt2live/matrix-appservice-sms.png?label=wip&title=WIP)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
+[![Greenkeeper badge](https://badges.greenkeeper.io/turt2live/matrix-appservice-twilio.svg)](https://greenkeeper.io/)
+[![TravisCI badge](https://travis-ci.org/turt2live/matrix-appservice-twilio.svg?branch=master)](https://travis-ci.org/turt2live/matrix-appservice-sms) 
+[![Targeted for next release](https://badge.waffle.io/turt2live/matrix-appservice-twilio.png?label=sorted&title=Targeted+for+next+release)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
+[![WIP](https://badge.waffle.io/turt2live/matrix-appservice-twilio.png?label=wip&title=WIP)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
 
-Uses Twilio to send and receive SMS messages in Matrix. Talk about it on Matrix: [#webhooks:t2bot.io](https://matrix.to/#/#webhooks:t2bot.io)
+Uses Twilio to send and receive SMS messages in Matrix. Talk about it on Matrix: [#sms:t2bot.io](https://matrix.to/#/#sms:t2bot.io)
 
 # Requirements
 
@@ -19,7 +19,7 @@ Uses Twilio to send and receive SMS messages in Matrix. Talk about it on Matrix:
 
 1. Clone this repository and install the dependencies
    ```
-   git clone http://github.com/turt2live/matrix-appservice-sms
+   git clone http://github.com/turt2live/matrix-appservice-twilio
    cd matrix-appservice-sms
    npm install
    ```
@@ -34,13 +34,13 @@ Uses Twilio to send and receive SMS messages in Matrix. Talk about it on Matrix:
 4. Copy/symlink the registration file to your Synapse directory
    ```
    cd ~/.synapse
-   ln -s ../matrix-appservice-sms/appservice-registration-sms.yaml appservice-registration-sms.yaml
+   ln -s ../matrix-appservice-twilio/appservice-registration-twilio.yaml appservice-registration-twilio.yaml
    ```
 
 5. Add the registration file to your `homeserver.yaml`
    ```
    ...
-   app_service_config_files: ["appservice-registration-sms.yaml"]
+   app_service_config_files: ["appservice-registration-twilio.yaml"]
    ...
    ```
 

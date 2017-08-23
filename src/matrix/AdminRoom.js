@@ -12,7 +12,7 @@ class AdminRoom {
     /**
      * Creates a new Matrix Admin Room
      * @param {string} roomId the Matrix room ID
-     * @param {SmsBridge} bridge the SmsBridge bridge
+     * @param {TwilioBridge} bridge the SmsBridge bridge
      * @param {string} owner the owner of the room
      */
     constructor(roomId, bridge, owner) {
