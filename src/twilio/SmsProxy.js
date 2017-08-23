@@ -6,12 +6,13 @@ class SmsProxy {
 
     init(config) {
         this._client = new twilio(config.twilio.accountSid, config.twilio.accountToken);
-        this._from = config.smsBridge.phoneNumber;
+        this._from = config.bridge.phoneNumber;
         return Promise.resolve();
     }
 
     send(phoneNumber, text) {
         if (!phoneNumber.startsWith("+")) phoneNumber = "+" + phoneNumber;
+        LogService.info("SmsProxy", "Sending text message to " + phoneNumber);
         return this._client.messages.create({
             body: text,
             to: phoneNumber,

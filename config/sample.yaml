@@ -30,6 +30,9 @@ bridge:
   allowedUsers:
   - "@me:t2bot.io"
 
+advanced:
+  localpartPrefix: "_twilio_"
+
 logging:
   file: logs/sms.log
   console: true

@@ -32,6 +32,9 @@ new Cli({
                 phoneNumber: "+15551234567",
                 allowedUsers: ["@me:t2bot.io"]
             },
+            advanced: {
+                localpartPrefix: "_twilio_"
+            },
             logging: {
                 file: "logs/twilio.log",
                 console: true,

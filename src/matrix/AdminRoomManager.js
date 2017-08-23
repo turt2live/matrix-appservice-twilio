@@ -1,6 +1,7 @@
 var AdminRoom = require("./AdminRoom");
 var Promise = require('bluebird');
 var LogService = require("../LogService");
+var _ = require("lodash");
 
 /**
  * Manages admin rooms for users of the bridge.
@@ -24,7 +25,7 @@ class AdminRoomManager {
             this._adminRoomsByOwner[roomInstance.owner] = [];
 
         this._adminRooms[roomInstance.roomId] = roomInstance;
-        this._adminRoomsByOwner[owner].push(roomInstance.roomId);
+        this._adminRoomsByOwner[roomInstance.owner].push(roomInstance.roomId);
     }
 
     getOrCreateAdminRoom(userId) {
@@ -82,7 +83,7 @@ class AdminRoomManager {
             var roomMemberIds = _.keys(members);
             var botIdx = roomMemberIds.indexOf(this._bridge.getBot().getUserId());
 
-            if (roomMemberIds.length == 2) {
+            if (roomMemberIds.length == 2 && botIdx !== -1) {
                 var otherUserId = roomMemberIds[botIdx == 0 ? 1 : 0];
                 this._addAdminRoom(new AdminRoom(roomId, this._bridge, otherUserId));
 
@@ -96,7 +97,7 @@ class AdminRoomManager {
 
             LogService.verbose("AdminRoomManager", "Room " + roomId + " is not viable as an admin room");
             return Promise.reject();
-        });
+        }).catch(() => Promise.reject());
     }
 
     processEvent(roomId, event) {
