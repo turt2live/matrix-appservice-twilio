@@ -8,7 +8,7 @@ homeserver:
   domain: "localhost"
 
 # Configuration specific to the bridge. All fields (unless otherwise marked) are required.
-smsBot:
+bot:
   # Appearance options for the Matrix bot
   appearance:
     displayName: "SMS Bridge"
@@ -20,7 +20,7 @@ twilio:
   accountToken: "YOUR_AUTH_TOKEN_HERE"
 
 # Settings related to the operation of the bridge
-smsBridge:
+bridge:
   # The phone number to listen for incoming SMS messages on, and to send messages from
   # Must be registered already in Twilio
   phoneNumber: "+15551234567"

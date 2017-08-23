@@ -18,7 +18,7 @@ new Cli({
                 mediaUrl: "http://localhost:8008",
                 domain: "localhost"
             },
-            smsBot: {
+            bot: {
                 appearance: {
                     displayName: "Twilio Bridge",
                     avatarUrl: "https://t2bot.io/_matrix/media/v1/download/t2l.io/SOZlqpJCUoecxNFZGGnDEhEy" // sms bridge icon
@@ -28,7 +28,7 @@ new Cli({
                 accountSid: "YOUR_SID_HERE",
                 accountToken: "YOUR_AUTH_TOKEN_HERE"
             },
-            smsBridge: {
+            bridge: {
                 phoneNumber: "+15551234567",
                 allowedUsers: ["@me:t2bot.io"]
             },

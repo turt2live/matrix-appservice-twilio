@@ -7,6 +7,7 @@ var _ = require('lodash');
 var util = require("./utils");
 var SmsProxy = require("./twilio/SmsProxy");
 var RemoteUser = require("matrix-appservice-bridge").RemoteUser;
+var AdminRoomManager = require("./matrix/AdminRoomManager");
 
 class TwilioBridge {
     constructor(config, registration) {
@@ -14,7 +15,7 @@ class TwilioBridge {
 
         this._config = config;
         this._registration = registration;
-        this._adminRooms = {}; // { roomId: AdminRoom }
+        this._adminRoomMgr = new AdminRoomManager(this);
 
         this._bridge = new Bridge({
             registration: this._registration,
@@ -77,7 +78,8 @@ class TwilioBridge {
      * @param {string} phoneNumber the phone number (without leading +)
      * @return {Intent} the virtual user intent
      */
-    getSmsIntent(phoneNumber) {
+    getTwilioIntent(phoneNumber) {
+        if (phoneNumber.startsWith("+")) phoneNumber = phoneNumber.substring(1);
         return this._bridge.getIntentFromLocalpart("_sms_" + phoneNumber);
     }
 
@@ -87,43 +89,16 @@ class TwilioBridge {
      * @returns {boolean} true if the user ID is a bridged user, false otherwise
      */
     isBridgeUser(handle) {
-        return this.getBot().getUserId() == handle || (handle.startsWith("@_sms_") && handle.endsWith(":" + this._config.homeserver.domain));
-    }
-
-    getOrCreateAdminRoom(userId) {
-        var roomIds = _.keys(this._adminRooms);
-        for (var roomId of roomIds) {
-            if (!this._adminRooms[roomId]) continue;
-            if (this._adminRooms[roomId].owner === userId)
-                return Promise.resolve(this._adminRooms[roomId]);
-        }
-
-        return this.getBotIntent().createRoom({
-            createAsClient: false, // use bot
-            options: {
-                invite: [userId],
-                is_direct: true,
-                preset: "trusted_private_chat",
-                visibility: "private",
-                initial_state: [{content: {guest_access: "can_join"}, type: "m.room.guest_access", state_key: ""}]
-            }
-        }).then(room => {
-            var newRoomId = room.room_id;
-            return this._processRoom(newRoomId, /*adminRoomOwner=*/userId).then(() => {
-                var room = this._adminRooms[newRoomId];
-                if (!room) throw new Error("Could not create admin room for " + userId);
-                return room;
-            });
-        });
+        return this.getBot().getUserId() == handle || this.isTwilioUser(handle);
     }
 
     /**
-     * Destroys an admin room. This will not cause the bridge bot to leave. It will simply de-categorize it.
-     * The room may be unintentionally restored when the bridge restarts, depending on the room conditions.
-     * @param {string} roomId the room ID to destroy
+     * Determines if the given user ID is a Twilio bridged user.
+     * @param {string} handle the matrix user ID to check
+     * @returns {boolean} true if the user ID is a bridged user, false otherwise
      */
-    removeAdminRoom(roomId) {
-        this._adminRooms[roomId] = null;
+    isTwilioUser(handle) {
+        return handle.startsWith("@_twilio_") && handle.endsWith(":"+this._config.homeserver.domain);
     }
 
     /**
@@ -133,8 +108,8 @@ class TwilioBridge {
     _updateBotProfile() {
         LogService.info("TwilioBridge", "Updating appearance of bridge bot");
 
-        var desiredDisplayName = this._config.smsBot.appearance.displayName || "SMS Bridge";
-        var desiredAvatarUrl = this._config.smsBot.appearance.avatarUrl || "https://t2bot.io/_matrix/media/v1/download/t2l.io/SOZlqpJCUoecxNFZGGnDEhEy"; // sms icon
+        var desiredDisplayName = this._config.bot.appearance.displayName || "SMS Bridge";
+        var desiredAvatarUrl = this._config.bot.appearance.avatarUrl || "https://t2bot.io/_matrix/media/v1/download/t2l.io/SOZlqpJCUoecxNFZGGnDEhEy"; // sms icon
 
         var botIntent = this.getBotIntent();
 
@@ -181,22 +156,7 @@ class TwilioBridge {
      */
     _processRoom(roomId, adminRoomOwner = null, newRoom = false) {
         LogService.info("TwilioBridge", "Request to bridge room " + roomId);
-        return this.getBot().getJoinedMembers(roomId).then(members => {
-            var roomMemberIds = _.keys(members);
-            var botIdx = roomMemberIds.indexOf(this._bridge.getBot().getUserId());
 
-            if (roomMemberIds.length == 2 || adminRoomOwner) {
-                var otherUserId = roomMemberIds[botIdx == 0 ? 1 : 0];
-                this._adminRooms[roomId] = new AdminRoom(roomId, this, otherUserId || adminRoomOwner);
-                LogService.verbose("TwilioBridge", "Added admin room for user " + (otherUserId || adminRoomOwner));
-
-                if (newRoom) {
-                    this.getBotIntent().sendText(roomId, "Hello! This room can be used to manage various aspects of the bridge. Although this currently doesn't do anything, it will be more active in the future.");
-                }
-            } // else it is just a regular room
-
-            // TODO: If @_sms_* is in a room but no bridge bot, then invite the bot & complain if we can't do the invite.
-        });
     }
 
     /**
@@ -207,8 +167,7 @@ class TwilioBridge {
      */
     _tryProcessAdminEvent(event) {
         var roomId = event.room_id;
-
-        if (this._adminRooms[roomId]) this._adminRooms[roomId].handleEvent(event);
+        this._adminRoomMgr.processEvent(roomId, event);
     }
 
     /**
@@ -246,7 +205,7 @@ class TwilioBridge {
 
     _processMessage(event) {
         if (this.isBridgeUser(event.sender)) return;
-        if (this._config.TwilioBridge.allowedUsers.indexOf(event.sender) === -1) return; // not allowed - don't send
+        if (this._config.bridge.allowedUsers.indexOf(event.sender) === -1) return; // not allowed - don't send
 
         this.getBot().getJoinedMembers(event.room_id).then(members => {
             var roomMemberIds = _.keys(members);
@@ -261,11 +220,11 @@ class TwilioBridge {
     _sendSms(phoneNumber, event) {
         LogService.verbose("TwilioBridge", "Sending text to " + phoneNumber);
         SmsProxy.send(phoneNumber, event.content.body).then(() => {
-            this.getSmsIntent(phoneNumber).sendReadReceipt(event.room_id, event.event_id);
+            this.getTwilioIntent(phoneNumber).sendReadReceipt(event.room_id, event.event_id);
         }).catch(error => {
             LogService.error("TwilioBridge", "Error sending message to " + phoneNumber);
             LogService.error("TwilioBridge", error);
-            this.getSmsIntent(phoneNumber).sendMessage(event.room_id, {
+            this.getTwilioIntent(phoneNumber).sendMessage(event.room_id, {
                 msgtype: "m.notice",
                 body: "Error sending text message. Please try again later."
             });

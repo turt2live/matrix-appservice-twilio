@@ -8,7 +8,7 @@ properties:
         type: "string"
       accountToken:
         type: "string"
-  smsBridge:
+  bridge:
     type: "object"
     properties:
       phoneNumber:
@@ -24,7 +24,7 @@ properties:
         type: "string"
       mediaUrl:
         type: "string"
-  smsBot:
+  bot:
     type: "object"
     properties:
       appearance:
