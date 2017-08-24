@@ -35,6 +35,10 @@ web:
   port: 4501
   host: "0.0.0.0"
 
+  # A secret that is required to allow requests from Twilio.
+  # Your URL will be https://your.server.com/api/v1/twilio/{secret}/sms
+  secret: "SET_A_SECRET"
+
 advanced:
   localpartPrefix: "_twilio_"
 

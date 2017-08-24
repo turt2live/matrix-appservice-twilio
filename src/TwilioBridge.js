@@ -8,6 +8,7 @@ var util = require("./utils");
 var SmsProxy = require("./twilio/SmsProxy");
 var RemoteUser = require("matrix-appservice-bridge").RemoteUser;
 var AdminRoomManager = require("./matrix/AdminRoomManager");
+var PubSub = require("pubsub-js");
 
 class TwilioBridge {
     constructor(config, registration) {
@@ -48,6 +49,8 @@ class TwilioBridge {
                 }
             }
         });
+
+        PubSub.subscribe("sms_recv", this._onSms.bind(this));
     }
 
     run(port) {
@@ -234,7 +237,7 @@ class TwilioBridge {
             returnPromise = this._processMessage(event);
         }
 
-        return returnPromise.catch(err => {
+        return (returnPromise || Promise.resolve()).catch(err => {
             LogService.error("TwilioBridge", "Error processing event " + event.event_id + " in room " + event.room_id);
             LogService.error("TwilioBridge", err);
         })
@@ -258,7 +261,7 @@ class TwilioBridge {
         if (this.isBridgeUser(event.sender)) return;
         if (this._config.bridge.allowedUsers.indexOf(event.sender) === -1) return; // not allowed - don't send
 
-        this.getBot().getJoinedMembers(event.room_id).then(members => {
+        return this.getBot().getJoinedMembers(event.room_id).then(members => {
             var roomMemberIds = _.keys(members);
             var phoneNumbers = this._getPhoneNumbers(roomMemberIds);
 
@@ -292,6 +295,27 @@ class TwilioBridge {
         }
 
         return numbers;
+    }
+
+    _onSms(topic, event) {
+        LogService.info("TwilioBridge", "Processing SMS from " + event.from + " to " + event.to);
+        this.getBot().getJoinedRooms().then(rooms => {
+            for (var roomId of rooms) {
+                this._trySendMessage(roomId, event);
+            }
+        });
+    }
+
+    _trySendMessage(roomId, event) {
+        this.getBot().getJoinedMembers(roomId).then(members => {
+            var intent = this.getTwilioIntent(event.from);
+            var memberIds = _.keys(members);
+
+            if (memberIds.indexOf(intent.getClient().credentials.userId) === -1) return;
+
+            LogService.info("TwilioBridge", "Sending text from " + event.from + " to " + event.to + " to room " + roomId);
+            return intent.sendText(roomId, event.body);
+        });
     }
 }
 

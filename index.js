@@ -4,6 +4,7 @@ var AppServiceRegistration = require("matrix-appservice-bridge").AppServiceRegis
 var path = require("path");
 var TwilioStore = require("./src/storage/TwilioStore");
 var TwilioBridge = require("./src/TwilioBridge");
+var WebService = require("./src/WebService");
 
 new Cli({
     registrationPath: "appservice-registration-twilio.yaml",
@@ -70,6 +71,8 @@ new Cli({
         LogService.info("index", "Preparing database...");
         TwilioStore.prepare().then(() => {
             LogService.info("index", "Preparing bridge...");
+            return WebService.bind(config.web.host, config.web.port, config.web.secret);
+        }).then(() => {
             var bridge = new TwilioBridge(config, registration);
             return bridge.run(port);
         }).catch(err => {
