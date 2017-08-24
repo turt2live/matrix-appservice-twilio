@@ -5,7 +5,7 @@ var Promise = require('bluebird');
 class SmsProxy {
 
     init(config) {
-        this._client = new twilio(config.twilio.accountSid, config.twilio.accountToken);
+        this._client = new twilio(config.twilio.accountSid, config.twilio.authToken);
         this._from = config.bridge.phoneNumber;
         return Promise.resolve();
     }

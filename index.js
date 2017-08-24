@@ -26,7 +26,7 @@ new Cli({
             },
             twilio: {
                 accountSid: "YOUR_SID_HERE",
-                accountToken: "YOUR_AUTH_TOKEN_HERE"
+                authToken: "YOUR_AUTH_TOKEN_HERE"
             },
             bridge: {
                 phoneNumber: "+15551234567",
@@ -34,6 +34,10 @@ new Cli({
             },
             advanced: {
                 localpartPrefix: "_twilio_"
+            },
+            web: {
+                port: 4501,
+                host: '0.0.0.0'
             },
             logging: {
                 file: "logs/twilio.log",
@@ -65,7 +69,7 @@ new Cli({
         LogService.init(config);
         LogService.info("index", "Preparing database...");
         TwilioStore.prepare().then(() => {
-           LogService.info("index", "Preparing bridge...");
+            LogService.info("index", "Preparing bridge...");
             var bridge = new TwilioBridge(config, registration);
             return bridge.run(port);
         }).catch(err => {

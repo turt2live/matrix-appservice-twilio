@@ -1,12 +1,19 @@
 "$schema": "http://json-schema.org/draft-04/schema#"
 type: "object"
 properties:
+  web:
+    type: "object"
+    properties:
+      port:
+        type: "number"
+      host:
+        type: "string"
   twilio:
     type: "object"
     properties:
       accountSid:
         type: "string"
-      accountToken:
+      authToken:
         type: "string"
   bridge:
     type: "object"

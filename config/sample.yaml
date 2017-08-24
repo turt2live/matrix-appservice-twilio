@@ -17,7 +17,7 @@ bot:
 # Your Twilio account settings
 twilio:
   accountSid: "YOUR_SID_HERE"
-  accountToken: "YOUR_AUTH_TOKEN_HERE"
+  authToken: "YOUR_AUTH_TOKEN_HERE"
 
 # Settings related to the operation of the bridge
 bridge:
@@ -29,6 +29,11 @@ bridge:
   # the above phone number.
   allowedUsers:
   - "@me:t2bot.io"
+
+# The web settings. Used by Twilio to send messages into Matrix
+web:
+  port: 4501
+  host: "0.0.0.0"
 
 advanced:
   localpartPrefix: "_twilio_"
