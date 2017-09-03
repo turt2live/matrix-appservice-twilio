@@ -1,6 +1,5 @@
 # matrix-appservice-twilio
 
-[![Greenkeeper badge](https://badges.greenkeeper.io/turt2live/matrix-appservice-twilio.svg)](https://greenkeeper.io/)
 [![TravisCI badge](https://travis-ci.org/turt2live/matrix-appservice-twilio.svg?branch=master)](https://travis-ci.org/turt2live/matrix-appservice-sms) 
 [![Targeted for next release](https://badge.waffle.io/turt2live/matrix-appservice-twilio.png?label=sorted&title=Targeted+for+next+release)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
 [![WIP](https://badge.waffle.io/turt2live/matrix-appservice-twilio.png?label=wip&title=WIP)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
