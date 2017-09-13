@@ -6,7 +6,7 @@ var TwilioStore = require("./src/storage/TwilioStore");
 var TwilioBridge = require("./src/TwilioBridge");
 var WebService = require("./src/WebService");
 
-new Cli({
+var cli = new Cli({
     registrationPath: "appservice-registration-twilio.yaml",
     enableRegistration: true,
     enableLocalpart: true,
@@ -16,7 +16,6 @@ new Cli({
         defaults: {
             homeserver: {
                 url: "http://localhost:8008",
-                mediaUrl: "http://localhost:8008",
                 domain: "localhost"
             },
             bot: {
@@ -34,7 +33,8 @@ new Cli({
                 allowedUsers: ["@me:t2bot.io"]
             },
             advanced: {
-                localpartPrefix: "_twilio_"
+                localpartPrefix: "_twilio_",
+                localpartBridge: "_twilio",
             },
             web: {
                 port: 4501,
@@ -53,16 +53,18 @@ new Cli({
         }
     },
     generateRegistration: function (registration, callback) {
+        var config = cli.getConfig();
+
         registration.setId(AppServiceRegistration.generateToken());
         registration.setHomeserverToken(AppServiceRegistration.generateToken());
         registration.setAppServiceToken(AppServiceRegistration.generateToken());
         registration.setRateLimited(false); // disabled because webhooks can get spammy
 
         if (!registration.getSenderLocalpart()) {
-            registration.setSenderLocalpart("_twilio");
+            registration.setSenderLocalpart(config.advanced.localpartBridge);
         }
 
-        registration.addRegexPattern("users", "@_twilio.*", true);
+        registration.addRegexPattern("users", "@" + config.advanced.localpartPrefix + ".*", true);
 
         callback(registration);
     },
@@ -80,4 +82,5 @@ new Cli({
             throw err;
         });
     }
-}).run();
+});
+cli.run();

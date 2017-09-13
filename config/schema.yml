@@ -31,8 +31,6 @@ properties:
         type: "string"
       url:
         type: "string"
-      mediaUrl:
-        type: "string"
   bot:
     type: "object"
     properties:
@@ -47,6 +45,8 @@ properties:
     type: "object"
     properties:
       localpartPrefix:
+        type: "string"
+      localpartBridge:
         type: "string"
   logging:
     type: "object"

@@ -41,6 +41,7 @@ web:
 
 advanced:
   localpartPrefix: "_twilio_"
+  localpartBridge: "_twilio"
 
 logging:
   file: logs/sms.log
