@@ -7,8 +7,8 @@ var TwilioStore = require("./storage/TwilioStore");
 var util = require("./utils");
 var Promise = require("bluebird");
 var _ = require("lodash");
-var PhoneNumberManager = require("./processing/PhoneNumberManager");
 var PubSub = require("pubsub-js");
+var PhoneNumberCache = require("./processing/PhoneNumberCache");
 
 class TwilioBridge {
     constructor(config, registration) {
@@ -49,8 +49,19 @@ class TwilioBridge {
 
     _registerConfigRoutes() {
         for (var user of this._config.bridge.allowedUsers) {
-            PhoneNumberManager.addUserPhoneNumber(user, this._config.bridge.phoneNumber);
+            PhoneNumberCache.registerNumber(this._config.bridge.phoneNumber, 'user', user);
         }
+    }
+
+    /**
+     * Creates a new direct chat between a phone number and a target user ID
+     * @param {string} fromNumber the number that sent the message
+     * @param {string} targetUserId the matrix user ID to chat with
+     * @returns {Promise<string>} resolves to the created room ID
+     */
+    createDirectChat(fromNumber, targetUserId) {
+        // TODO:
+        return Promise.reject(new Error("NYI"));
     }
 
     /**
@@ -211,7 +222,7 @@ class TwilioBridge {
                 var userId = _.filter(roomMemberIds, u => !this.isBridgeUser(u))[0];
 
                 // It's effectively a 1:1 with another user. Let's see if that user has a phone number
-                var phoneNumber = PhoneNumberManager.getUserPhoneNumber(userId);
+                var phoneNumber = PhoneNumberCache.getNumberForOwner(userId);
                 if (!phoneNumber) {
                     LogService.warn("TwilioBridge", "Room " + roomId + " looks like a 1:1, but the user does not have a phone number. Emitting phone number request event.");
                     PubSub.publish("new_direct_chat_without_phone", {
@@ -224,8 +235,7 @@ class TwilioBridge {
                 var realPhoneNumber = this.getPhoneNumbersFromMembers(_.filter(roomMemberIds, u => this.isTwilioUser(u)))[0];
 
                 LogService.info("TwilioBridge", "Room " + roomId + " appears to be a 1:1 with " + userId + " (" + phoneNumber + ") to " + realPhoneNumber + " - adding route");
-                PhoneNumberManager.addVirtualPhoneNumber(roomId, phoneNumber);
-                PhoneNumberManager.addRealPhoneNumber(roomId, realPhoneNumber);
+                PhoneNumberCache.addUserNumber(realPhoneNumber, phoneNumber, roomId);
             });
     }
 
@@ -243,7 +253,9 @@ class TwilioBridge {
 
     getPhoneNumbersFromMembers(userIds) {
         // Convert @_twilio_+12223334444:domain.com to +12223334444
-        return userIds.map(u => u.substring(("@" + this._userPrefix).length).split(':')[0].trim());
+        // Convert @_twilio_12223334444:domain.com to +12223334444
+        return userIds.map(u => u.substring(("@" + this._userPrefix).length).split(':')[0].trim())
+            .map(n => n.startsWith("+") ? n : "+" + n);
     }
 
     /**
@@ -277,6 +289,8 @@ class TwilioBridge {
             returnPromise = this._bridge.getIntent(event.state_key).join(event.room_id).then(() => this._processRoom(event.room_id, /*isNew:*/true, /*inviteTarget:*/event.state_key));
         } else if (event.type === "m.room.message" && event.sender !== this.getBot().getUserId()) {
             returnPromise = this._processMessage(event);
+        } else if (event.type === "m.room.member") {
+            // TODO: Re-check room and update PhoneNumberCache
         }
 
         return (returnPromise || Promise.resolve()).catch(err => {

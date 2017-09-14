@@ -1,7 +1,6 @@
 var LogService = require("../LogService");
 var TwilioSmsSender = require("../twilio/TwilioSmsSender");
-var PhoneNumberManager = require("./PhoneNumberManager");
-var Promise = require("bluebird");
+var PhoneNumberCache = require("./PhoneNumberCache");
 
 /**
  * Handles processing outbound SMS
@@ -22,15 +21,14 @@ class SmsSender {
      * @param {MatrixEvent} event the event to process
      */
     emitMessage(event) {
-        var fromPhone = PhoneNumberManager.getVirtualPhoneNumber(event.room_id);
+        var fromPhone = PhoneNumberCache.getNumberForRoom(event.room_id);
         if (!fromPhone) {
-            LogService.warn("SmsSender", "Failed to process event " + event.event_id + " (sender: " + event.sender + ") in room " + event.room_id + " because there is no routed virtual phone number");
+            LogService.warn("SmsSender", "Failed to process event " + event.event_id + " (sender: " + event.sender + ") in room " + event.room_id + " because there is no routed phone number");
             return;
         }
 
         return this._bridge.getPhoneNumbersInRoom(event.room_id).then(phoneNumbers => {
             for (var number of phoneNumbers) {
-                PhoneNumberManager.addRealPhoneNumber(event.room_id, number);
                 this._sendSms(fromPhone, number, event.content.body, event);
             }
         });
