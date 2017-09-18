@@ -10,7 +10,8 @@
   "scripts": {
     "buy-number:dev": "node scripts/test/buy-number.js",
     "send-sms:dev": "node scripts/test/send-sms.js",
-    "receive-sms:dev": "node scripts/test/receive-sms.js"
+    "receive-sms:dev": "node scripts/test/receive-sms.js",
+    "search-numbers:dev": "node scripts/test/search-numbers.js"
   },
   "author": "Travis Ralston <travis.nathaniel.ralston@gmail.com> (http://travisralston.me)",
   "license": "GPL-3.0",
