@@ -7,9 +7,7 @@ A standard "1:1 chat" for the bridge involves three users: The Matrix user, the 
 * A control number must be used for signaling (this is the owner's phone number when in single user mode)
 * The receiver (virtual user) must always be asked if they want to receive messages from the room.
   * Ie: `@travis:t2l.io wants you to chat in #matrix:matrix.org with 8000 other people. Reply ALLOW or DENY to respond.`
-* The receiver (virtual user) can opt-out at any time by sending a message to the control number. Eg: `EXIT` or `OPTOUT`
-* The bridge operator can disable MUC support through the configuration
-  * This would mean any virtual users in a MUC just don't see anything, and nothing gets forwarded back to Matrix.
+* The receiver (virtual user) can opt-out at any time by sending a message to the control number. Eg: `EXIT`, `LEAVE`, or `OPTOUT`
 
 ## Setting up a MUC as a user (single user or provider)
 
