@@ -85,6 +85,8 @@ class AdminRoomManager {
 
             if (roomMemberIds.length == 2 && botIdx !== -1) {
                 var otherUserId = roomMemberIds[botIdx == 0 ? 1 : 0];
+                if (this._bridge.isBridgeUser(otherUserId)) return Promise.reject();
+
                 this._addAdminRoom(new AdminRoom(roomId, this._bridge, otherUserId));
 
                 if (isNew) {

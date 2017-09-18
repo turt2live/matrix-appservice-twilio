@@ -48,20 +48,7 @@ class TwilioBridge {
     }
 
     _registerConfigRoutes() {
-        for (var user of this._config.bridge.allowedUsers) {
-            PhoneNumberCache.registerNumber(this._config.bridge.phoneNumber, 'user', user);
-        }
-    }
-
-    /**
-     * Creates a new direct chat between a phone number and a target user ID
-     * @param {string} fromNumber the number that sent the message
-     * @param {string} targetUserId the matrix user ID to chat with
-     * @returns {Promise<string>} resolves to the created room ID
-     */
-    createDirectChat(fromNumber, targetUserId) {
-        // TODO:
-        return Promise.reject(new Error("NYI"));
+        PhoneNumberCache.registerNumber(this._config.bridge.phoneNumber, 'user', this._config.bridge.allowedUser);
     }
 
     /**
@@ -205,6 +192,11 @@ class TwilioBridge {
         });
     }
 
+    _reprocessRoom(roomId) {
+        // TODO: Actually process the room (#24)
+        return Promise.resolve();
+    }
+
     _tryBridgeRoom(roomId) {
         return this.getBot().getJoinedMembers(roomId)
             .then(members => {
@@ -259,6 +251,60 @@ class TwilioBridge {
     }
 
     /**
+     * Creates a new direct chat between a phone number and a target user ID
+     * @param {string} fromNumber the number that sent the message
+     * @param {string} targetUserId the matrix user ID to chat with
+     * @returns {Promise<string>} resolves to the created room ID
+     */
+    createDirectChat(fromNumber, targetUserId) {
+        LogService.info("TwilioBridge", "New direct chat requested for " + targetUserId + " from " + fromNumber);
+        var virtualIntent = this.getTwilioIntent(fromNumber);
+
+        var userPowerLevels = {};
+        userPowerLevels[targetUserId] = 100;
+        userPowerLevels[this.getBot().getUserId()] = 100;
+        userPowerLevels[virtualIntent.client.credentials.userId] = 100;
+
+        return virtualIntent.createRoom({
+            createAsClient: true, // use intent
+            options: {
+                invite: [targetUserId, this.getBot().getUserId()],
+                is_direct: false,
+                preset: "trusted_private_chat",
+                visibility: "private",
+                initial_state: [
+                    {content: {guest_access: "can_join"}, type: "m.room.guest_access", state_key: ""},
+                    {
+                        content: {
+                            users: userPowerLevels,
+
+                            // Defaults from Riot
+                            // Note: these are required otherwise the appservice lib crashes us
+                            events_default: 0,
+                            state_default: 50,
+                            users_default: 0,
+                            invite: 0,
+                            redact: 50,
+                            ban: 50,
+                            kick: 50,
+                            events: {
+                                "m.room.avatar": 50,
+                                "m.room.name": 50,
+                                "m.room.canonical_alias": 50,
+                                "m.room.history_visibility": 50,
+                                "m.room.power_levels": 50
+                            }
+                        }, type: "m.room.power_levels", state_key: ""
+                    }
+                ]
+            }
+        }).then(room => {
+            this.getBotIntent().join(room.room_id); // accept our own invite, just in case it doesn't come our way
+            return room.room_id;
+        });
+    }
+
+    /**
      * Bridge handler to update/create user information
      * @private
      */
@@ -290,7 +336,7 @@ class TwilioBridge {
         } else if (event.type === "m.room.message" && event.sender !== this.getBot().getUserId()) {
             returnPromise = this._processMessage(event);
         } else if (event.type === "m.room.member") {
-            // TODO: Re-check room and update PhoneNumberCache
+            returnPromise = this._reprocessRoom(event.room_id);
         }
 
         return (returnPromise || Promise.resolve()).catch(err => {

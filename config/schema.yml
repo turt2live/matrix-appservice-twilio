@@ -22,8 +22,8 @@ properties:
     properties:
       phoneNumber:
         type: "string"
-      allowedUsers:
-        type: "array"
+      allowedUser:
+        type: "string"
   homeserver:
     type: "object"
     properties:

@@ -30,7 +30,7 @@ var cli = new Cli({
             },
             bridge: {
                 phoneNumber: "+15551234567",
-                allowedUsers: ["@me:t2bot.io"]
+                allowedUser: "@me:t2bot.io"
             },
             advanced: {
                 localpartPrefix: "_twilio_",
