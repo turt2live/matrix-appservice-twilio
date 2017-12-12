@@ -1,8 +1,6 @@
 # matrix-appservice-twilio
 
-[![TravisCI badge](https://travis-ci.org/turt2live/matrix-appservice-twilio.svg?branch=master)](https://travis-ci.org/turt2live/matrix-appservice-sms) 
-[![Targeted for next release](https://badge.waffle.io/turt2live/matrix-appservice-twilio.png?label=sorted&title=Targeted+for+next+release)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
-[![WIP](https://badge.waffle.io/turt2live/matrix-appservice-twilio.png?label=wip&title=WIP)](https://waffle.io/turt2live/waffle-matrix?utm_source=badge)
+[![TravisCI badge](https://travis-ci.org/turt2live/matrix-appservice-twilio.svg?branch=master)](https://travis-ci.org/turt2live/matrix-appservice-sms)
 
 Uses Twilio to send and receive SMS messages in Matrix. Talk about it on Matrix: [#sms:t2bot.io](https://matrix.to/#/#sms:t2bot.io)
 
