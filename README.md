@@ -51,4 +51,4 @@ The bridge should start working shortly afterwards.
 
 # Usage
 
-To send messages to a phone number (`+1 555 123 4567` for example), open a conversation with `@_sms_15551234567:yourdomain.com` and start chatting! All messages sent to that room will be sent via text message to the phone number. If they reply, it'll show up in the room.
+To send messages to a phone number (`+1 555 123 4567` for example), open a conversation with `@_twilio_15551234567:yourdomain.com` and start chatting! All messages sent to that room will be sent via text message to the phone number. If they reply, it'll show up in the room.
