@@ -17,7 +17,7 @@ Uses Twilio to send and receive SMS messages in Matrix. Talk about it on Matrix:
 1. Clone this repository and install the dependencies
    ```
    git clone http://github.com/turt2live/matrix-appservice-twilio
-   cd matrix-appservice-sms
+   cd matrix-appservice-twilio
    npm install
    ```
 
