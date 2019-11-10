@@ -2,6 +2,7 @@ var LogService = require("../LogService");
 var PubSub = require("pubsub-js");
 var PhoneNumberCache = require("./PhoneNumberCache");
 var Promise = require("bluebird");
+var util = require("../utils");
 
 /**
  * Handles incoming SMS from Twilio and sends it to Matrix
@@ -49,15 +50,79 @@ class SmsReceiver {
                 return;
             }
 
-            for (var roomId of rooms) {
-                LogService.info("SmsReceiver", "Sending text from " + event.from + " to " + event.to + " to room " + roomId);
-                intent.sendText(roomId, event.body);
+            if (event.media != null){
+                // TODO: handle anything in the event.body also...maybe just always do the sendText() also?
+                var mxcUrls = [];
+                var promises = [];
+                for (var mediaOne of event.media) {
+                    promises.push(this._uploadMedia(mediaOne, mxcUrls, intent));
+                }
+    
+                Promise.all(promises).then(() => {
+                    for (var roomId of rooms) {
+                        this._postMedia(roomId, mxcUrls, intent);
+                    }
+                });
+                
             }
+            // Handle any text now (even if we handled media above), but skip if message is ""
+            if (event.body.length > 0) {
+                for (var roomId of rooms) {
+                    LogService.info("SmsReceiver", "Sending text from " + event.from + " to " + event.to + " to room " + roomId);
+                    intent.sendText(roomId, event.body);
+                }
+        }
+
         }).catch(err => {
             LogService.error("SmsReceiver", "Failed to get rooms for " + event.from + " to " + event.to + " owned by " + numberRegistration.ownerId);
             LogService.error("SmsReceiver", err);
         });
     }
+
+    _uploadMedia(media, mxcUrls, intent) {
+        return util.uploadContentFromUrl(this._bridge, media.url, intent)
+            .then(mxcUrl => mxcUrls.push({url: media.url, contentType: media.contentType, mxc: mxcUrl}));
+    }
+
+    /**
+     * Posts media to a given matrix room
+     * @param {string} roomId the matrix room ID
+     * @param {string} content the media content
+     * @param {Intent} intent the intent to post as
+     * @private
+     */
+    _postMedia(roomId, content, intent) {
+        var contentPromises = [];
+        var eventIds = [];
+        for (var media of content) {
+            var body = {
+                url: media.mxc,  
+                body: "MMS",
+                info: {
+                    mimetype: media.contentType
+                }, 
+                external_url: media.url 
+            };
+
+            // TODO: Should to handle at least the twillio fully supported mime types, plus VCARD
+            // This is approximately the LEAST we can do...
+            if (media.contentType.startsWith("video/")) {
+                body['msgtype'] = 'm.video';
+            } else if (media.contentType.startsWith("image/"))  {
+                body['msgtype'] = 'm.image';
+            } else {
+                body['msgtype'] = 'm.file';
+            }
+
+            contentPromises.push(intent.sendMessage(roomId, body));
+ 
+        }
+
+        Promise.all(contentPromises).then(() => {
+            return Promise.resolve();
+        });
+    }
+
 }
 
 module.exports = new SmsReceiver();
