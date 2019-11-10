@@ -21,16 +21,24 @@ class TwilioSmsSender {
      * @param {string} text the text to send
      * @returns {Promise<*>} resolves when completed
      */
-    send(fromPhoneNumber, toPhoneNumber, text) {
+    send(fromPhoneNumber, toPhoneNumber, text, mediaUrl) {
         if (!toPhoneNumber.startsWith("+")) toPhoneNumber = "+" + toPhoneNumber;
         if (!fromPhoneNumber.startsWith("+")) fromPhoneNumber = "+" + fromPhoneNumber;
 
         LogService.info("TwilioSmsSender", "Sending text message to " + toPhoneNumber + " from " + fromPhoneNumber);
-        return this._client.messages.create({
+
+	var obj = {
             body: text,
             to: toPhoneNumber,
             from: fromPhoneNumber
-        }).then(message => {
+        };
+
+        if (mediaUrl != null) {
+            obj.mediaUrl = mediaUrl;
+        }
+
+        return this._client.messages.create(obj)
+        .then(message => {
             LogService.info("TwilioSmsSender", "Sent message to " + toPhoneNumber + " from " + fromPhoneNumber);
         });
     }

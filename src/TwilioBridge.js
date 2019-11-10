@@ -139,7 +139,7 @@ class TwilioBridge {
     // HACK: The js-sdk doesn't support this endpoint. See https://github.com/matrix-org/matrix-js-sdk/issues/440
     getClientJoinedMembers(intent, roomId) {
         // Borrowed from matrix-appservice-bridge: https://github.com/matrix-org/matrix-appservice-bridge/blob/435942dd32e2214d3aa318503d19b10b40c83e00/lib/components/app-service-bot.js#L49-L65
-        return intent.getClient()._http.authedRequestWithPrefix(undefined, "GET", "/rooms/" + encodeURIComponent(roomId) + "/joined_members", undefined, undefined, "/_matrix/client/r0")
+	return intent.getClient()._http.authedRequest(undefined, "GET", "/rooms/" + encodeURIComponent(roomId) + "/joined_members", undefined, undefined, { prefix: "/_matrix/client/r0"} )
             .then(res => {
                 if (!res.joined) return {};
                 return res.joined;

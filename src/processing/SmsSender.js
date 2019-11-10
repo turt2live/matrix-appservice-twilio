@@ -1,6 +1,8 @@
 var LogService = require("../LogService");
 var TwilioSmsSender = require("../twilio/TwilioSmsSender");
 var PhoneNumberCache = require("./PhoneNumberCache");
+var contentRepo = require("matrix-js-sdk/src/content-repo");
+
 
 /**
  * Handles processing outbound SMS
@@ -36,7 +38,17 @@ class SmsSender {
 
     _sendSms(fromPhone, targetPhone, body, forEvent) {
         var intent = this._bridge.getTwilioIntent(targetPhone);
-        TwilioSmsSender.send(fromPhone, targetPhone, body)
+
+	// Check to see if this needs to go as MMS
+	var mediaUrl = null;
+	if ( forEvent.content.msgtype != 'm.text' && 'url' in forEvent.content ) {
+        // SMELL: This is a really bad way to set the Ext URL.  Revisit this!!!
+       mediaUrl = contentRepo.getHttpUriForMxc("https://"+
+         this._bridge._config.homeserver.domain,
+		   forEvent.content.url);
+	}
+
+        TwilioSmsSender.send(fromPhone, targetPhone, body, mediaUrl)
             .then(() => intent.sendReadReceipt(forEvent.room_id, forEvent.event_id))
             .catch(err => {
                 LogService.error("SmsSender", "Error sending SMS message from " + fromPhone + " to " + targetPhone + " in room " + forEvent.room_id);

@@ -34,7 +34,21 @@ class TwilioReceiver {
         }
 
         LogService.verbose("TwilioReceiver", "Received valid SMS post");
-        PubSub.publish("sms_recv", {to: request.body.To, from: request.body.From, body: request.body.Body});
+
+        var obj = {to: request.body.To, from: request.body.From, body: request.body.Body};
+
+        // Handle and stash any MMS that might be present.
+        var media = [];
+        var num_media = request.body.NumMedia || 0;
+
+        while (num_media-- > 0 ) {
+            media.push({ contentType: request.body['MediaContentType' + num_media],
+                                 url: request.body['MediaUrl' + num_media] });
+        }
+        if (media.length > 0) {
+            obj.media = media;
+        }
+        PubSub.publish("sms_recv", obj);
         this._respondEmpty(response);
     }
 

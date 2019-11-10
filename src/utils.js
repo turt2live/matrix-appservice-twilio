@@ -1,8 +1,8 @@
 // File based on the following implementation of utils.js in matrix-appservice-twitter by Half-Shot:
 // https://github.com/Half-Shot/matrix-appservice-twitter/blob/6fc01588e51a9eb9a32e14a6b0338abfd7cc32ea/src/util.js
 
-var https = require('https');
-var http = require('http');
+var http = require('follow-redirects').http;
+var https = require('follow-redirects').https;
 var Buffer = require("buffer").Buffer;
 var log = require('./LogService');
 var mime = require('mime');
